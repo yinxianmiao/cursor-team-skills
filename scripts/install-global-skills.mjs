@@ -4,7 +4,6 @@
 import { mkdirSync } from 'node:fs'
 import { TEAM_SKILLS } from './skills-config.mjs'
 import { installOne, run, skillsDir } from './install-skill-utils.mjs'
-import { applySkillOverlays } from './apply-skill-overlays.mjs'
 
 const continueOnError = process.env.CONTINUE_ON_ERROR === '1'
 
@@ -52,8 +51,6 @@ for (const entry of TEAM_SKILLS) {
     if (!continueOnError) process.exit(1)
   }
 }
-
-applySkillOverlays()
 
 console.log(`\n==> 完成: 成功 ${ok} 项, 必选失败 ${fail} 项, 可选未装 ${optionalFail} 项`)
 console.log('==> 下一步: npm run skills:verify')
