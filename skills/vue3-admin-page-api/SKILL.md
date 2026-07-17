@@ -10,7 +10,7 @@ description: >-
 
 # Vue3 后台管理：新页面与接口联调（PIGX / 若依）
 
-Vue3 + Element Plus + Pinia 管理后台（**PIGX** 或 **若依 RuoYi-Vue3**）。本 Skill 管**工作流**；编码细则以项目 `.cursor/rules/` 为准（有则必须 @ 并遵守）。
+Vue3 + Element Plus + Pinia 管理后台（**PIGX** 或 **若依 RuoYi-Vue3**）。本 Skill 管**工作流**；编码细则以项目 `.cursor/rules/` 为准（由团队 `cursor-team-skills` 仓库 `rules:sync --preset admin` 同步 vue3 公用规则；有则必须 @ 并遵守）。
 
 ## 先识别项目栈（任务开始前）
 

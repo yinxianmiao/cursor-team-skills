@@ -1,0 +1,55 @@
+---
+description: uni-app 工程架构约定（路由、TabBar、请求层、Pinia；不含 pages/api 细则）
+globs:
+  - "**/pages.json"
+  - "**/manifest.json"
+  - "src/config/**"
+  - "src/utils/request.js"
+  - "src/store/**"
+alwaysApply: false
+---
+
+# uni-app 工程架构约定
+
+> 适用场景：路由注册、TabBar、请求层、Pinia 状态。文中路径为示例，以各项目实际目录为准。
+>
+> **本文件由 `cursor-skills` 同步生成，请勿手改；项目差异写在 `project.local.mdc`。**
+
+## 底部 Tab
+
+- `pages.json` 保留 `tabBar.list`，以支持 `uni.switchTab` 与 Tab 页缓存。
+- 修改 Tab 项时同步更新：项目 Tab 配置文件（见 `project.local.mdc`）与 `pages.json` 的 `tabBar.list`；跳转 Tab 页用 `uni.switchTab`。
+- **原生 TabBar**：页内勿再嵌一套底栏，除非 `project.local.mdc` 明确使用自定义底栏覆盖。
+- **自定义 TabBar**：组件路径、隐藏系统 Tab 的方式、高度常量，一律以 `project.local.mdc` 为准。
+
+## 页面与路由
+
+- 新页面在 `pages.json` 的 `pages`（或 `subPackages`）注册；需进 Tab 的页面还要加入 `tabBar.list`。
+- 跳转 Tab 页用 `uni.switchTab`；非 Tab 页用 `uni.navigateTo` / `redirectTo` 等，与 uni-app 文档一致。
+- 跳转路径必须与 `pages.json` 已注册路径一致，禁止硬编码未注册路由。
+
+## 网络请求
+
+- 业务接口封装在 `src/api/**`（写法见 **`uni-app/api.mdc`**）；页面调用见 **`uni-app/pages.mdc`**。
+- `baseURL`、拦截器、token 注入等逻辑集中在 `src/utils/request.js`；改环境或鉴权优先改此处。
+- 登录态失效（如 401）相关逻辑仅在请求层维护，业务页面不重复实现 token 刷新与重登跳转。
+
+## 状态（Pinia）
+
+- 模块放在 `src/store/modules/`（或项目既有 store 目录），在项目 store 入口汇总。
+- 跨页面共享的用户态、业务态优先走 store；页面内仅保留展示与交互所需局部状态。
+
+## 平台与条件编译
+
+- 端专有逻辑使用 `#ifdef MP-WEIXIN` / `#ifdef H5` 等条件编译，避免污染其它端。
+- 环境变量、跳转域名、接口前缀统一从 `import.meta.env` 或项目约定配置读取，避免在业务代码中散落硬编码地址。
+
+## 与相关规则的分工
+
+- **`vue3/base.mdc`**：`<script setup>` 结构、命名、模板注释、可维护性等 Vue 公用风格。
+- **`vue3/api-js.mdc`**：联调契约、禁止私自改参、删 helper 全仓检查。
+- **`uni-app/pages.mdc`**：`src/pages/**` 页面结构、组件化、生命周期、页面接 API。
+- **`uni-app/api.mdc`**：`src/api/**` mock 与 http 封装。
+- **`uni-app/style.mdc`**：样式块、SCSS 嵌套、布局与视觉约定。
+- **`uni-app/project.local.mdc`**：本仓库 TabBar / 分包 / 特有路径（手写，sync 不覆盖）。
+- **本文件**：`pages.json`、Tab 通用约定、config、request 层、Pinia 等工程配置。

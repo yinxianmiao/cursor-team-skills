@@ -9,15 +9,17 @@ description: >-
 
 # uni-app Vue3 通用开发
 
-uni-app + Vue3 + Pinia。本 Skill 管**工作流**；编码细则以项目 `.cursor/rules/` 为准，执行时必须一并遵守。
+uni-app + Vue3 + Pinia。本 Skill 管**工作流**；编码细则以项目 `.cursor/rules/` 为准（由团队 `cursor-team-skills` 仓库 `rules:sync` 同步，执行时必须遵守）。
 
 ## 配合 Rules（按项目实际路径 @）
 
 | 任务 | Rules |
 |------|-------|
-| 任意 `.vue` | `vue3/base.mdc`、`uni-app/style.mdc`（或项目等价规则） |
-| `src/api/**`、联调 | `vue3/api-js.mdc` |
-| 路由 / Tab / request / store | `uni-app/project.mdc`（或项目等价规则） |
+| 任意 `.vue` | `vue3/base.mdc`、`uni-app/style.mdc` |
+| `src/api/**`、联调 | `vue3/api-js.mdc`、`uni-app/api.mdc` |
+| 路由 / Tab / request / store | `uni-app/project.mdc` + `uni-app/project.local.mdc`（有则必读） |
+
+细则（脚本顺序、禁止改参、删 helper 等）**只维护在 rules**，本 Skill 不重复展开。
 
 ## 工作流路由（只读当前任务对应文件）
 
@@ -39,10 +41,6 @@ src/
 
 doc/api/*.md               # 后端契约（联调前必读）
 ```
-
-- 使用原生 `tabBar` 时勿在页内嵌自定义底栏
-- 页面/API 禁止直接 `uni.request`（极特殊需注明）
-- 页面头两条 HTML 注释：职责 + api/doc 指向（见 base 规则）
 
 ## 输出要求
 

@@ -1,0 +1,59 @@
+---
+description: uni-app API 模块约定（src/api 目录；mock、http 封装、联调替换）
+globs:
+  - "src/api/**/*.js"
+alwaysApply: false
+---
+
+# uni-app API 模块约定
+
+> 适用场景：编辑 `src/api/**` 下接口文件。请求拦截、baseURL 见 `src/utils/request.js`；联调契约与禁止私自改参见 `vue3/api-js.mdc`。
+
+> **本文件由 `cursor-skills` 同步生成，请勿手改；项目差异写在 `uni-app/project.local.mdc`。**
+
+## 目录与导出
+
+- 按业务分模块目录：`src/api/模块名/index.js`。
+- 页面只 `import` 具名导出方法，不在页面层拼 URL 或写 `uni.request`。
+- 每个模块文件顶部用块注释说明：**模块名**、当前是否 **mock**、联调时替换要点。
+
+## 方法签名
+
+- 统一：`export const methodName = (params) => { ... }`
+- 参数名固定写 `params`，**不写** `params = {}` 默认值。
+- `GET`：`return http.get('/path', params)`（query 走第二参数，不在调用方拼字符串）。
+- `POST`：`return http.post('/path', params)` 或按项目既有写法。
+- 仅后端契约明确要求时，才用路径参数 `` `/xxx/${id}` ``。
+
+## mock 阶段
+
+- mock 方法名、入参、返回结构按**预期真实契约**定义，与页面已用字段一致。
+- 常用 `Promise` + `setTimeout` 模拟延迟；mock 数据覆盖正常态所需字段。
+- 模块内 mock 常量、假数据放在文件上部，与导出方法空一行分隔。
+
+## 联调替换
+
+- 联调时**优先只改本文件**：mock 实现换成 `http.get/post`，**不改**方法名与 `params` 字段集合（除非用户授权或 `doc/api` 明确要求）。
+- 从 `@/utils/request` 引入 `http`：`import { http } from '@/utils/request'`。
+- 替换后删除或注释无用 mock 常量，避免双实现并存。
+
+## 注释与契约
+
+- 每个导出方法用 JSDoc：`@param` 写字段说明，`@returns` 写主要返回字段。
+- 页面实现与注释、与 `doc/api` 不一致时，在回复中说明；**不要**私自改页面入参去「对齐注释」。
+- 字段只用契约确定的唯一命名，不写 `a ?? b ?? c` 式多别名兜底。
+
+## 禁止事项
+
+- 不在 api 文件里写 UI 逻辑（`uni.showToast`、路由跳转等），除非项目已有特例。
+- 不新增与本次任务无关的接口方法。
+- 联调时未经用户授权：不增删 body/query 字段、不改方法导出名。
+
+## 与其它规则分工
+
+| 规则 | 分工 |
+|------|------|
+| **本文件** | api 目录结构、mock/http 写法、模块注释 |
+| `vue3/api-js.mdc` | 联调禁令、删 helper 全仓检查、页面接数约定 |
+| `uni-app/project.mdc` | `request.js`、401、环境变量 |
+| `uni-app/pages.mdc` | 页面如何 import 与调用本目录方法 |

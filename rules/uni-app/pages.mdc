@@ -1,0 +1,82 @@
+---
+description: uni-app 页面层约定（src/pages 目录；组件化、生命周期、接 API、跳转）
+globs:
+  - "src/pages/**/*.vue"
+alwaysApply: false
+---
+
+# uni-app 页面层约定
+
+> 适用场景：编辑 `src/pages/**` 下页面与页内组件。路由注册、TabBar 配置见 `uni-app/project.mdc` 与各项目 `uni-app/project.local.mdc`；样式见 `uni-app/style.mdc`；脚本通用风格见 `vue3/base.mdc`。
+>
+> **本文件由 `cursor-skills` 同步生成，请勿手改；项目差异写在 `project.local.mdc`。**
+
+## 文件与目录
+
+- 页面入口：`src/pages/模块/index.vue`（或同级单文件如 `download.vue`）；若项目使用分包，见 `project.local.mdc`。
+- **仅本页使用的子组件**：放 `src/pages/模块/components/`，命名带模块前缀。
+- 跨页面复用组件：放 `src/components/`，命名建议 `com-` 前缀。
+- 子组件用相对路径引入：`import Xxx from './components/xxx.vue'`。
+
+## 页面入口职责
+
+入口文件只保留：
+
+- 路由参数读取、页面级状态（`loading`、`visible` 等）
+- 调用 `src/api/**`、写入 `ref` / Pinia
+- 子组件拼装、`props` / `emit` 编排
+- 页面级跳转（`uni.navigateTo` / `switchTab` / `redirectTo` / `reLaunch`）
+
+复杂表单校验、弹窗内部交互优先放在子组件；父页面只接 `emit` 结果再请求。
+
+## 模板注释
+
+- 入口页 `template` 前用 HTML 注释写明：**页面名**、依赖的 **api 模块**、是否 **mock**。
+- 复杂 `v-if` 分支、独立业务区块前补 1 行结构注释（说明触发条件或区块意图）。
+
+## Tab 页约定
+
+- Tab 页组件路径、是否自定义底栏、高度扣减等以各项目 **`uni-app/project.local.mdc`** 为准。
+- 跳转 Tab 页用 `uni.switchTab`；非 Tab 用 `navigateTo` 等；路径须与 `pages.json` 一致。
+
+## 生命周期与数据
+
+- 列表/个人中心等「每次展示需刷新」：优先 `onShow` 拉数；一次性初始化用 `onLoad` / `onMounted`。
+- 请求用 `async/await`；`loading` 在 `try/finally` 收尾。
+- 返回数据**直接赋值**，避免无必要的 `map` 重组。
+
+## 页面接 API（强制）
+
+- 只 `import { xxx } from '@/api/模块'` 调用，**禁止**在页面写 `uni.request`（极特殊须注释说明）。
+- 错误提示依赖 `src/utils/request.js` 拦截器；页面层**默认不写** `catch` 做 toast（用户明确要求校验提示等除外）。
+- 子组件展示所需数据，默认在子组件内请求；父页面不做「先拉再透传」（业务明确要求统一编排时除外）。
+- 未经用户授权，**不改** `emit` / 提交 / 路由 query 的字段名。
+
+## 表单与反馈
+
+- 空项提示等业务校验：优先 `uni.showToast({ title, icon: 'none' })`；文案与 placeholder 一致。
+- 二次确认用 `uni.showModal`；短成功反馈可用项目内浮层组件（名称见 `project.local.mdc`）。
+
+## 组件化边界
+
+应拆 `components/` 的情况：
+
+- 2 个及以上独立业务区块；或单区块模板/逻辑明显偏大（约 80 行以上）
+- 独立交互状态（弹窗、复杂表单、Tab 面板）
+
+不必拆：单次出现的标题行、简单 `v-for` 列表项、无独立状态的几行模板。
+
+## 平台差异
+
+- H5 / 小程序 / App 差异用 `#ifdef` / `#ifndef` 条件编译，避免污染其它端。
+- 业务配置读 `src/config/**`，不在页面硬编码 URL。
+
+## 与其它规则分工
+
+| 规则 | 分工 |
+|------|------|
+| **本文件** | 页面结构、组件化、生命周期、接 api、跳转 |
+| `uni-app/project.mdc` | `pages.json`、Tab 通用约定、Pinia、request 层 |
+| `uni-app/project.local.mdc` | 本仓库 Tab 路径、分包、特有组件 |
+| `uni-app/api.mdc` | `src/api/**` 内 mock / http 实现 |
+| `vue3/api-js.mdc` | 联调禁令、契约一致性（页面+api 均适用，联调时建议 @） |
