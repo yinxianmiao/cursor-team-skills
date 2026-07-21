@@ -1,0 +1,35 @@
+---
+description: 文件编码 UTF-8（无 BOM）；含中文的新建/重写文件防乱码
+globs: "**/*"
+alwaysApply: true
+---
+
+# 文件编码（强制）
+
+> **本文件由 `cursor-team-skills` 同步生成，请勿手改。**
+
+
+## 仓库约定
+
+- 所有文本文件：**UTF-8，无 BOM**（见 `.editorconfig`、`.gitattributes`）。
+- 含中文的 `.vue` / `.js` / `.md` / `.mdc` 等，写入后必须可被 UTF-8 正常解码。
+
+## Agent 写文件（含中文时）
+
+1. **禁止**把 UTF-8 中文按 Latin-1 / GBK 等方式落盘（会出现 `Ƶ`、`Ã¤` 等乱码）。
+2. 新建或整文件重写且含中文时，优先用终端以 UTF-8 写入，例如：
+   ```bash
+   python3 -c "from pathlib import Path; Path('path/to/file.vue').write_text(content, encoding='utf-8')"
+   ```
+   或 `open(path, 'w', encoding='utf-8')`。
+3. 用编辑器的 Write/StrReplace 写完含中文文件后，**必须自检**：
+   ```bash
+   file -I path/to/file.vue   # 应含 charset=utf-8
+   python3 -c "open('path/to/file.vue', encoding='utf-8').read()"
+   ```
+4. 若 `file -I` 为 `iso-8859-1` 或 Python 解码失败 → 立即用 UTF-8 重写，不要留给用户。
+
+## 用户侧
+
+- Cursor 设置：`files.encoding` = `utf8`；`files.autoGuessEncoding` = `false`（建议）。
+- 发现乱码：让 Agent「用 UTF-8 重写该文件」，或本地 Reopen with Encoding → UTF-8 后保存。

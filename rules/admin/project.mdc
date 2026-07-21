@@ -1,0 +1,66 @@
+---
+description: 后台工程架构约定（路由、权限、请求层、Pinia；跨项目通用）
+globs:
+  - "src/router/**"
+  - "src/permission.js"
+  - "src/permission.ts"
+  - "src/utils/request.js"
+  - "src/utils/request.ts"
+  - "src/store/**"
+  - "src/stores/**"
+  - "vite.config.*"
+  - ".env*"
+alwaysApply: false
+---
+
+# 后台工程架构约定
+
+> 适用场景：路由注册、权限、请求层、Pinia 状态。文中 `src/views/`、`src/api/`、`@/utils/request` 等为**示例路径**，复制到其它项目时替换为实际目录。
+
+> **本文件由 `cursor-team-skills` 同步生成，请勿手改；项目差异写在 `admin/project.local.mdc`。**
+
+## 技术栈识别（任务开始前）
+
+常见后台栈，**以目标仓库特征为准**：
+
+| 栈 | 常见特征 |
+|----|----------|
+| **若依 RuoYi-Vue3** | `permission.js`、`getRouters`、`useDict`、`listXxx`、`rows/total` |
+| **PIGX / 衍生** | `backEnd.ts`、`useTable`、`com-table`、`data.records/total` |
+| **自研后台** | 跟同模块参考页的 request 封装与列表模式 |
+
+新功能**跟同模块、同栈参考页**走，禁止跨栈混用列表模式。
+
+## 路由与权限
+
+- 路由实例通常在 `src/router/`；`meta` 遵循项目既有约定（`hidden`、`permissions`、`title`、`noCache` 等）。
+- 动态路由常见来源：后端菜单接口（若依 `getRouters`、PIGX `backEnd` 等）。
+- 业务页 component 路径通常对应 `src/views/<模块>/index.vue`。
+- 跳转路径须与已注册路由一致，禁止硬编码未注册路由。
+
+## 壳布局
+
+- 后台页通常使用 `src/layout/` 壳布局（`app-container` 等全局 class）。
+- 全局组件注册见项目入口；新增全局组件优先局部注册，避免污染全局。
+- NProgress 若已接入路由切换，不要在每个请求手动开启。
+
+## 网络请求
+
+- 业务接口封装在 `src/api/**`（写法见 **`admin/api.mdc`**）；页面调用见 **`admin/pages.mdc`**。
+- `baseURL`、拦截器、token 注入集中在 `src/utils/request.*`；改环境或鉴权优先改此处。
+- 登录态失效（如 401）仅在请求层处理，业务页面不重复实现重登跳转。
+- 环境变量从 `import.meta.env` 或项目约定配置读取；**禁止**密钥/token 写入仓库。
+
+## 状态（Pinia / Vuex）
+
+- 模块放在项目约定目录（常见 `src/store/modules/` 或 `src/stores/`）。
+- 跨页面共享态走 store；页面内保留展示与交互局部状态。
+
+## 与相关规则的分工
+
+- **`vue3/base.mdc`**：`<script setup>` 结构、命名、模板注释、可维护性。
+- **`vue3/api-js.mdc`**：联调契约、禁止私自改参、删 helper 全仓检查。
+- **`admin/pages.mdc`**：`src/views/**` 页面结构、列表模式、接 API。
+- **`admin/api.mdc`**：`src/api/**` mock 与 request 封装。
+- **`admin/style.mdc`**：样式块、SCSS 嵌套、Element Plus 覆盖。
+- **本文件**：路由、权限、request 层、Pinia 等工程配置。

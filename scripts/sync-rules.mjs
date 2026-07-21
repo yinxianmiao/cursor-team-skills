@@ -8,8 +8,9 @@
  *
  * 环境变量:
  *   CURSOR_TEAM_SKILLS_ROOT / CURSOR_SKILLS_ROOT  本仓库根目录
- *   RULES_PRESET        默认 uni-app（亦可 admin，仅 sync shared/vue3）
+ *   RULES_PRESET        默认 uni-app（亦可 admin → shared/vue3 + rules/admin）
  *
+ * 始终同步: rules/shared/00-encoding.mdc → .cursor/rules/00-encoding.mdc
  * 不会覆盖: *.local.mdc
  */
 import {
@@ -111,6 +112,17 @@ if (!existsSync(rulesSrc)) {
 const preset = args.preset
 const copies = []
 
+// shared 根级（如编码）→ .cursor/rules/
+const sharedRoot = join(rulesSrc, 'shared')
+if (existsSync(sharedRoot)) {
+  for (const name of readdirSync(sharedRoot)) {
+    const full = join(sharedRoot, name)
+    if (!statSync(full).isFile()) continue
+    if (!name.endsWith('.mdc') || name.endsWith('.local.mdc')) continue
+    copies.push({ src: full, dest: join(rulesDest, name) })
+  }
+}
+
 // shared vue3 → .cursor/rules/vue3/
 const sharedVue3 = join(rulesSrc, 'shared', 'vue3')
 for (const rel of listFiles(sharedVue3)) {
@@ -130,16 +142,18 @@ if (preset === 'uni-app') {
     })
   }
 } else if (preset === 'admin') {
-  // 后台项目：仅 sync vue3 公用规则；admin 专用规则可后续加 rules/admin/
+  // 后台：vue3 公用 + rules/admin/*
   const admin = join(rulesSrc, 'admin')
-  if (existsSync(admin)) {
-    for (const rel of listFiles(admin)) {
-      if (rel.endsWith('.local.mdc')) continue
-      copies.push({
-        src: join(admin, rel),
-        dest: join(rulesDest, 'admin', rel),
-      })
-    }
+  if (!existsSync(admin)) {
+    console.error(`错误: 找不到 rules/admin/: ${admin}`)
+    process.exit(1)
+  }
+  for (const rel of listFiles(admin)) {
+    if (rel.endsWith('.local.mdc')) continue
+    copies.push({
+      src: join(admin, rel),
+      dest: join(rulesDest, 'admin', rel),
+    })
   }
 } else {
   console.error(`错误: 未知 preset「${preset}」，可用: uni-app | admin`)
@@ -188,5 +202,9 @@ npm run rules:sync -- --preset ${preset} --target ${targetRoot}
 )
 
 console.log(`\n==> 完成: 同步 ${synced} 个文件 → ${rulesDest}`)
-console.log('==> 请确认已有 uni-app/project.local.mdc（或等价 local），承载本项目差异')
+if (preset === 'uni-app') {
+  console.log('==> 请确认已有 uni-app/project.local.mdc，承载本项目差异')
+} else {
+  console.log('==> 请确认已有 admin/project.local.mdc（可选），承载本项目差异')
+}
 process.exit(0)

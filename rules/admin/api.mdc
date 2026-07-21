@@ -1,0 +1,60 @@
+---
+description: 后台 API 模块约定（src/api 目录；request 封装、联调替换；跨项目通用）
+globs:
+  - "src/api/**/*.{js,ts}"
+alwaysApply: false
+---
+
+# 后台 API 模块约定
+
+> 适用场景：编辑 `src/api/**` 下接口文件。请求拦截、baseURL 见 `src/utils/request.*`；联调契约与禁止私自改参见 `vue3/api-js.mdc`。
+
+> **本文件由 `cursor-team-skills` 同步生成，请勿手改；项目差异写在 `admin/project.local.mdc`。**
+
+## 目录与导出
+
+- 按业务分模块目录：`src/api/<模块名>/`（文件名跟项目既有风格走）。
+- 页面只 `import` 具名导出方法，不在页面层拼 URL 或写裸 axios/fetch。
+- 每个模块文件顶部用块注释说明：**模块名**、主要接口、联调时对照的接口文档（如 `doc/api`）。
+
+## 方法签名
+
+- 跟同模块已有文件保持一种导出风格（`export function` 或 `export const`）。
+- 参数名跟同文件走（`params`、`data` 或 `query`），**不写** `params = {}` 默认值。
+- 采用项目既有 request 封装，常见示例：
+
+```javascript
+import request from '@/utils/request';
+export function listXxx(query) {
+  return request({ url: '/xxx/list', method: 'get', params: query });
+}
+```
+
+- 下载/导出：`responseType: 'blob'`（跟同模块参考）。
+- 仅后端契约明确要求时，才用路径参数 `` `/xxx/${id}` ``。
+
+## mock 与联调
+
+- mock 方法名、入参、返回结构按**预期真实契约**定义，与页面已用字段一致。
+- 联调时**优先只改本文件**：换成真实请求，**不改**方法名与字段集合（除非用户授权或 `doc/api` 明确要求）。
+- 每个导出方法注释写清：**HTTP 方法 + 路径**。
+
+## 注释与契约
+
+- 页面实现与注释、与 `doc/api` 不一致时，在回复中说明；**不要**私自改页面入参去「对齐注释」。
+- 字段只用契约确定的唯一命名，不写 `a ?? b ?? c` 式多别名兜底。
+
+## 禁止事项
+
+- 不在 api 文件里写 UI 逻辑（Message、路由跳转等），除非项目已有特例。
+- 不新增与本次任务无关的接口方法。
+- 联调时未经用户授权：不增删 body/query 字段、不改方法导出名。
+
+## 与其它规则分工
+
+| 规则 | 分工 |
+|------|------|
+| **本文件** | api 目录结构、request 写法、模块注释 |
+| `vue3/api-js.mdc` | 联调禁令、删 helper 全仓检查 |
+| `admin/project.mdc` | request 层、401、环境变量 |
+| `admin/pages.mdc` | 页面如何 import 与调用本目录方法 |

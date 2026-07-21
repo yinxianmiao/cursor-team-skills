@@ -1,0 +1,110 @@
+---
+description: 后台页面层约定（src/views 目录；组件化、生命周期、接 API；跨项目通用）
+globs:
+  - "src/views/**/*.vue"
+alwaysApply: false
+---
+
+# 后台页面层约定
+
+> 适用场景：编辑 `src/views/**` 下页面与页内组件。路由、权限见 `admin/project.mdc`；样式见 `admin/style.mdc`；脚本通用风格见 `vue3/base.mdc`。
+
+> **本文件由 `cursor-team-skills` 同步生成，请勿手改；项目差异写在 `admin/project.local.mdc`。**
+
+## 文件与目录
+
+- 页面入口：`src/views/<模块>/index.vue`（或 `detail.vue`、`*-dialog.vue`，与同模块一致）。
+- **仅本页使用的子组件**：放 `src/views/<模块>/components/`，或同级 `*Dialog.vue`。
+- 跨页面复用组件：放 `src/components/`，命名建议 `com-` 前缀。
+- 子组件用相对路径引入。
+
+## 页面入口职责
+
+入口文件只保留：
+
+- 查询表单、分页状态（`loading`、`visible` 等）
+- 调用 `src/api/**`、写入 `ref` / `reactive` / Pinia
+- 子组件拼装、`props` / `emit` 编排
+- 页面级路由跳转（`router.push` 等）
+
+复杂表单校验、弹窗内部交互优先放在子组件；父页面只接 `emit` 结果再请求。
+
+## 模板注释
+
+- 入口页 `template` 前用 HTML 注释写明：**页面名**、依赖的 **api 模块**、主接口方法名。
+- 复杂 `v-if` 分支、独立业务区块前补 1 行结构注释。
+
+## 列表页模式（跟同模块参考页走）
+
+常见两种模式，**禁止跨模式混用**：
+
+### A. 封装表格壳（如 com-table / useTable）
+
+```javascript
+const queryForm = reactive({ current: 1, size: 10, total: 0 });
+const tableData = ref([]);
+
+const loadList = async () => {
+  const res = await fetchList({ ...queryForm });
+  tableData.value = res.data.records; // 字段以契约为准，直接赋值
+  queryForm.total = res.data.total;
+};
+onMounted(() => loadList());
+```
+
+### B. 标准 el-table + 分页
+
+```javascript
+const queryParams = reactive({ pageNum: 1, pageSize: 10 });
+const tableList = ref([]);
+const total = ref(0);
+
+const getList = async () => {
+  const res = await listXxx(queryParams);
+  tableList.value = res.rows;
+  total.value = res.total;
+};
+onMounted(() => getList());
+```
+
+分页字段与响应层级**以同模块参考页和接口文档为准**。
+
+## 生命周期与数据
+
+- 列表初始化：`onMounted`；`keep-alive` 返回刷新可用 `onActivated`。
+- 请求用 `async/await`；`loading` 在 `try/finally` 收尾。
+- 返回数据**直接赋值**，避免无必要的 `map` 重组。
+
+## 页面接 API（强制）
+
+- 只 `import { xxx } from '@/api/<模块>'` 调用，**禁止**在页面写裸 axios/fetch（极特殊须注释说明）。
+- 错误提示依赖 `src/utils/request.*` 拦截器；页面层**默认不写** `catch` 做 toast（用户明确要求除外）。
+- 子组件展示所需数据，默认在子组件内请求；父页面不做「先拉再透传」（业务明确要求统一编排时除外）。
+- 未经用户授权，**不改** `emit` / 提交 / 路由 query 的字段名。
+
+## 表单与反馈
+
+- 校验提示、成功/删除确认跟项目既有方式（常见 `ElMessage` / `ElMessageBox`）。
+- 与全局错误处理一致，避免重复弹栈。
+
+## 权限
+
+- 按钮权限跟项目既有指令（如 `v-hasPermi`）；路由级由后端菜单控制。
+
+## 组件化边界
+
+应拆 `components/` 的情况：
+
+- 2 个及以上独立业务区块；或单区块模板/逻辑明显偏大（约 80 行以上）
+- 独立交互状态（弹窗、复杂表单）
+
+不必拆：单次出现的标题行、简单 `v-for` 列表项、无独立状态的几行模板。
+
+## 与其它规则分工
+
+| 规则 | 分工 |
+|------|------|
+| **本文件** | 页面结构、组件化、生命周期、接 api |
+| `admin/project.mdc` | 路由、权限、Pinia、request 层 |
+| `admin/api.mdc` | `src/api/**` 内 request 实现 |
+| `vue3/api-js.mdc` | 联调禁令、契约一致性（页面+api 均适用） |

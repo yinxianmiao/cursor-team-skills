@@ -1,0 +1,77 @@
+---
+description: 后台样式与布局约定（Element Plus、SCSS 嵌套；跨项目通用）
+globs:
+  - "src/**/*.vue"
+  - "src/**/*.scss"
+  - "src/**/*.css"
+alwaysApply: false
+---
+
+# 后台样式与布局约定
+
+> 适用场景：页面/组件样式块、SCSS 嵌套、Element Plus 覆盖。文中全局样式入口等为**示例路径**，复制到其它项目时替换为实际目录。
+
+> **本文件由 `cursor-team-skills` 同步生成，请勿手改；项目差异写在 `admin/project.local.mdc`。**
+
+## 样式块基础
+
+- 默认写法：`<style scoped lang="scss">`。
+- 普通页面/组件避免无 `scoped` 的样式；全局样式仅在约定入口处维护，并添加用途注释。
+- 需要穿透子组件样式时使用 `:deep()`，仍放在 `scoped` 样式块内。
+- 生成或修改 `.vue` 时，样式区块默认输出 `<style scoped lang="scss">`。
+
+## 布局与视觉
+
+- 列表页根容器常见 `app-container`（跟项目全局样式）。
+- 常见布局优先 `flex`；表格高度常用 `calc(100vh - Npx)`（跟同模块参考页）。
+- 页面根节点使用语义化 class，避免裸 div 堆叠。
+- 主色与侧边栏变量以项目全局样式变量为准。
+
+## 暗色模式
+
+- 若项目已接入暗色，新增样式须兼容 `.dark` CSS 变量，避免写死浅色背景/文字色。
+
+## Element Plus 模板约定
+
+- 插槽用具名写法：`#default`、`#prefix`、`#footer` 等。
+- 表格长文本列加 `show-overflow-tooltip`。
+- 自定义列：`<template #default="{ row }">`。
+- 表单查询区常用 `el-form` + `:inline="true"`；弹窗用 `el-dialog` + `el-form`。
+
+## Element Plus 样式覆盖
+
+- 覆盖 Element 组件样式统一用 `:deep()`：
+
+```scss
+:deep(.el-input__wrapper) { }
+:deep(.el-table) { }
+:deep(.el-pagination) { }
+```
+
+- 不写污染全局的选择器；弹窗内表单宽度、label 对齐跟同模块 dialog 参考页。
+
+## 属性书写顺序
+
+- CSS 属性统一按「布局定位 → 盒模型 → 视觉表现 → 文本排版 → 交互动画」顺序书写。
+
+## SCSS 嵌套（强约束）
+
+- 必须使用父级包裹子级的嵌套写法；除全局工具类外，禁止同层大段平铺选择器。
+
+```scss
+.app-container {
+  .query-form {
+    margin-bottom: 16px;
+  }
+  .table-wrapper {
+    :deep(.el-table) { }
+  }
+}
+```
+
+## 与相关规则的分工
+
+- **`vue3/base.mdc`**：模板分区注释、组件命名、脚本结构。
+- **`admin/project.mdc`**：路由、权限、请求层等工程结构。
+- **`admin/pages.mdc`**：页面结构、`app-container`、列表壳。
+- **本文件**：样式块写法、SCSS 嵌套、Element Plus 覆盖、暗色兼容。
